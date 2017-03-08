@@ -6,49 +6,8 @@ GO
 
 ------------------------------- (1) Polybase Building Blocks ------------------------------------------------------------------
 
--- Prestep: Configuring Hadoop flavor
-exec sp_configure 'hadoop connectivity', 5
-Reconfigure
-
 /*
-* Optional: check which SQL Server instances are part of the scale-out group and their status.
-*/
-select * from sys.dm_exec_compute_nodes;
-select * from sys.dm_exec_compute_node_status;
-
-
-/*
-* STEP A: Create External Data Source
-*		To specify LOCATION URI of Hadoop or Azure blob storage.
-*		(Optional) Specify RESOURCE_MANAGER_LOCATION to enable push-down computation to Hadoop for faster query performance.
-*		(Optional) Specify CREDENTIAL to authenticate against a Kerberos secured Hadoop cluster.
-*/
-
-CREATE EXTERNAL DATA SOURCE HadoopHDPCluster 
-WITH (TYPE = Hadoop, LOCATION = N'hdfs://10.193.26.177:8020', 
-		RESOURCE_MANAGER_LOCATION = N'10.193.26.178:8050');
-
-SELECT * FROM sys.external_data_sources;
-
-
-
-/*
-* Step B: Create External File format 
-*		To specify the layout of data stored in Hadoop or Azure blob storage that will be referenced by the external table.
-*		Supported File Formats: Delimited Text, RCFile, ORC, Parquet
-*/
-
-
-CREATE EXTERNAL FILE FORMAT TextFile 
-WITH (FORMAT_TYPE = DelimitedText, 
-FORMAT_OPTIONS (FIELD_TERMINATOR = N'|'));
-
-SELECT * FROM sys.external_file_formats;
-
-
-
-/*
-* Step C: Create External Table
+ Create External Table
 *		To reference data stored in a Hadoop cluster or Azure blob storage.
 *		Specify LOCATION: relative file path of the data from hdfs root
 *		Specify DATA_SOURCE & FILE_FORMAT objects
@@ -62,10 +21,11 @@ CREATE EXTERNAL TABLE [dbo].[SensorData]
 	[Speed] [float] NOT NULL,
 	[YearMeasured] [int] NOT NULL
 )
-WITH (LOCATION = N'/Demo/car_sensordata.tbl/', 
-		DATA_SOURCE = HadoopHDPCluster, 
+WITH (LOCATION = '/tmp/SensorData/', 
+		DATA_SOURCE = HadoopCDHCluster, 
 		FILE_FORMAT = TextFile
 );
+
 
 SELECT * FROM sys.external_tables;
 SELECT * FROM sys.tables where is_external = 1;
@@ -106,7 +66,7 @@ OPTION (FORCE EXTERNALPUSHDOWN);
 
 -- PRESENTER HINT: 
 -- The above query runs for about 50 seconds. 
--- Navigate to http://10.193.26.178:8088 in your browser to see details of the Map job submitted to the hadoop cluster.
+-- Navigate to Jobtracker in your browser to see details of the Map job submitted to the hadoop cluster.
 -- Run MonitorWithDMVs script to drill into the execution of this query while it is running: show the distributed execution steps and the external hadoop operation.
 
 
@@ -154,8 +114,8 @@ CREATE EXTERNAL TABLE [dbo].[FastestCustomers2006]
 	[Speed] [float] NULL,
 	[YearMeasured] [int] NULL
 )
-WITH (LOCATION = N'//Archive/2006/', 
-		DATA_SOURCE = HadoopHDPCluster, 
+WITH (LOCATION = '/tmp/Archive/2006/', 
+		DATA_SOURCE = HadoopCDHCluster, 
 		FILE_FORMAT = TextFile
 );
 
@@ -177,7 +137,7 @@ ORDER BY Speed DESC;
  DROP TABLE dbo.FastestDrivers;
  DROP EXTERNAL TABLE dbo.FastestCustomers2006;
  DROP EXTERNAL TABLE dbo.SensorData;
- DROP EXTERNAL DATA SOURCE HadoopHDPCluster;
+ DROP EXTERNAL DATA SOURCE HadoopCDHCluster;
  DROP EXTERNAL FILE FORMAT TextFile;
 
 
