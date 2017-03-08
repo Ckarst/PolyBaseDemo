@@ -1,0 +1,37 @@
+﻿CREATE TABLE dbo.Fact_Trip
+(
+    [DateID] INT NOT NULL, 
+    [MedallionID] INT NOT NULL, 
+    [HackneyLicenseID] INT NOT NULL, 
+    [PickupTimeID] INT NOT NULL, 
+    [DropoffTimeID] INT NOT NULL, 
+    [PickupGeographyID] INT NULL, 
+    [DropoffGeographyID] INT NULL, 
+    [PickupLatitude] FLOAT NULL, 
+    [PickupLongitude] FLOAT NULL, 
+    [PickupLat] VARCHAR(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL, 
+    [PickupLong] VARCHAR(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL, 
+    [DropoffLatitude] FLOAT NULL, 
+    [DropoffLongitude] FLOAT NULL, 
+    [DropoffLat] VARCHAR(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL, 
+    [DropoffLong] VARCHAR(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL, 
+    [PassengerCount] INT NULL, 
+    [TripDurationSeconds] INT NULL, 
+    [TripDistanceMiles] FLOAT NULL, 
+    [PaymentType] VARCHAR(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL, 
+    [FareAmount] MONEY NULL, 
+    [SurchargeAmount] MONEY NULL, 
+    [TaxAmount] MONEY NULL, 
+    [TipAmount] MONEY NULL, 
+    [TollsAmount] MONEY NULL, 
+    [TotalAmount] MONEY NULL
+)
+WITH( DISTRIBUTION = HASH(HackneyLicenseid), 
+	  CLUSTERED COLUMNSTORE INDEX,
+	  PARTITION ([DateID] RANGE Right FOR VALUES
+					(
+					 20130101 ,20130201 ,20130301 ,20130401 ,20130501 ,20130601 
+					,20130701 ,20130801 ,20130901 ,20131001 ,20131101 ,20131201
+					)
+				)
+	) 

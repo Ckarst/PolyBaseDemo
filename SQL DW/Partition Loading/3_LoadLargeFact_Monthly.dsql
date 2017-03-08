@@ -1,0 +1,83 @@
+﻿-- Large Fact Load from friendly directory layout.
+-- about 3:19 minute runtime
+DECLARE @Month VARCHAR(10) = '01'
+DECLARE @Year  VARCHAR(10) = '2013'
+
+DECLARE @Date     INT = CAST(CONCAT(@Year,@Month) AS INT)  
+DECLARE @location VARCHAR(100)
+
+-- SQL Execution Strings
+DECLARE @SQLString      NVARCHAR(4000);  
+DECLARE @ParmDefinition NVARCHAR(500);  
+  
+-- Loop Counters
+DECLARE @MonthCounter INT = Cast(@Month AS INT)
+DECLARE @YearCounter  INT = Cast(@Year  AS INT)
+
+
+-- Load 12 months of data (Jan through Dec)
+		WHILE (SELECT @MonthCounter) <= 12 -- Daily loop  
+		BEGIN  
+  
+		   SET @location = CONCAT('\Trip\',@YearCounter,'\',@MonthCounter) -- ADLS directory location
+		   
+		   -- Create External Table to Month Directory in ADLS
+		   SET @SQLString =  
+			 CONCAT('Create External Table ADLS.Trip_',@Date,'
+					(
+					 [DateID] int NOT NULL, 
+					 [MedallionID] int NOT NULL, 
+					 [HackneyLicenseID] int NOT NULL, 
+					 [PickupTimeID] int NOT NULL, 
+					 [DropoffTimeID] int NOT NULL, 
+					 [PickupGeographyID] int NULL, 
+					 [DropoffGeographyID] int NULL, 
+					 [PickupLatitude] float NULL, 
+					 [PickupLongitude] float NULL, 
+					 [PickupLat] varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL, 
+					 [PickupLong] varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL, 
+					 [DropoffLatitude] float NULL, 
+					 [DropoffLongitude] float NULL, 
+					 [DropoffLat] varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL, 
+					 [DropoffLong] varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL, 
+					 [PassengerCount] int NULL, 
+					 [TripDurationSeconds] int NULL, 
+					 [TripDistanceMiles] float NULL, 
+					 [PaymentType] varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL, 
+					 [FareAmount] money NULL, 
+					 [SurchargeAmount] money NULL, 
+					 [TaxAmount] money NULL, 
+					 [TipAmount] money NULL, 
+					 [TollsAmount] money NULL, 
+					 [TotalAmount] money NULL
+					)
+					 With (Location = ''',@location,''', 
+						   Data_Source = AzureDataLakeStore,
+						   File_Format = uncompressedcsv)
+					')       
+						 ;
+		
+		   SET @ParmDefinition = '@location varchar(100),@Date int'
+
+		   EXECUTE SP_ExecuteSQL @SQLString , @ParmDefinition, @location = @location, @Date = @Date
+
+		   -- Import into SQL Table from External Table
+		  
+		   SET @SQLString =  
+			 CONCAT('CREATE TABLE Trip_',@Date,' 
+			         WITH (DISTRIBUTION = ROUND_ROBIN, HEAP)
+		             AS SELECT * fROM ADLS.Trip_',@Date,'   
+		   
+		             DROP EXTERNAL TABLE ADLS.Trip_',@Date) ;
+		
+		
+		   SET @ParmDefinition = '@Date INT'
+
+		   EXECUTE SP_ExecuteSQL @SQLString , @ParmDefinition, @Date = @Date  	  
+		   
+		   SET @MonthCounter = @Monthcounter + 1 
+		   Set @Date = @Date + 1 -- 
+		END
+
+		
+

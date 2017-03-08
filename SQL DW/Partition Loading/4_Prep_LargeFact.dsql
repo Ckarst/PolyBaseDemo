@@ -1,0 +1,40 @@
+﻿-- Copy Data into Correctly formatted tables VIA CTAS
+-- 6 minutes
+DECLARE @Month VARCHAR(10) = '01'
+DECLARE @Year VARCHAR(10) = '2013'
+
+DECLARE @Date INT = CAST(CONCAT(@Year,@Month) AS INT)
+
+-- SQL Execution Strings
+DECLARE @SQLString NVARCHAR(4000);  
+DECLARE @ParmDefinition NVARCHAR(500);  
+  
+-- Loop Counters
+DECLARE @MonthCounter INT = Cast(@Month AS INT)
+
+
+
+	WHILE (SELECT @MonthCounter) <= 12 -- Monthly loop  
+		BEGIN  
+		   -- Create partitioned table locally   
+		   SET @SQLString =  
+			 CONCAT('Create Table Trip_',@Date,'_partitioned 
+                     With ( 
+							DISTRIBUTION = HASH(HackneyLicenseid), 
+							CLUSTERED COLUMNSTORE INDEX, 
+							PARTITION ([DateID] RANGE Right FOR VALUES
+										(
+											20130101 ,20130201 ,20130301 ,20130401 ,20130501 ,20130601 
+										   ,20130701 ,20130801 ,20130901 ,20131001 ,20131101 ,20131201
+										)
+									   )
+							) AS 
+							Select * FROM Trip_',@Date)		
+		   SET @ParmDefinition = '@Date int'
+		   EXECUTE SP_ExecuteSQL @SQLString , @ParmDefinition, @Date = @Date
+
+		
+		   SET @MonthCounter = @Monthcounter + 1 
+		   Set @Date = @Date + 1
+		END
+		

@@ -1,0 +1,38 @@
+﻿/*
+		DROP TABLE Trip_201311_partitioned
+		DROP TABLE Trip_201310_partitioned
+		DROP TABLE Trip_201309_partitioned			
+		DROP TABLE Trip_201308_partitioned
+		DROP TABLE Trip_201307_partitioned
+		DROP TABLE Trip_201306_partitioned			
+		DROP TABLE Trip_201305_partitioned
+		DROP TABLE Trip_201304_partitioned
+		DROP TABLE Trip_201303_partitioned			
+		DROP TABLE Trip_201302_partitioned
+		DROP TABLE Trip_201301_partitioned
+		
+		DROP TABLE Trip_201312
+		DROP TABLE Trip_201311
+		DROP TABLE Trip_201310
+		DROP TABLE Trip_201309			
+		DROP TABLE Trip_201308
+		DROP TABLE Trip_201307
+		DROP TABLE Trip_201306			
+		DROP TABLE Trip_201305
+		DROP TABLE Trip_201304
+		DROP TABLE Trip_201303			
+		DROP TABLE Trip_201302
+		DROP TABLE Trip_201301
+		
+		
+		
+	-- WAREHOUSE TABLES	
+		DROP TABLE FACT_Trip
+		DROP TABLE Dim_DATE
+		DROP TABLE Dim_GEOGRAPHY
+		DROP TABLE Dim_HackneyLicense
+		DROP TABLE Dim_Medallion
+		DROP TABLE Dim_Time
+		DROP TABLE Dim_Weather
+		
+		*/

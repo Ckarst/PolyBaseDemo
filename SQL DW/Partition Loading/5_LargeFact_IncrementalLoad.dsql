@@ -1,0 +1,53 @@
+﻿
+-- Copy Data into Correctly formatted tables VIA CTAS
+-- 16 seconds
+DECLARE @Month VARCHAR(10) = '01'
+DECLARE @Year varchar(10) = '2013'
+DECLARE @Date INT = CAST(CONCAT(@Year,@Month) AS INT)
+
+-- SQL Execution Strings
+DECLARE @SQLString NVARCHAR(4000);  
+DECLARE @ParmDefinition NVARCHAR(500);  
+  
+-- Loop Counters
+DECLARE @MonthCounter INT = Cast(@Month AS INT)
+
+	WHILE (SELECT @MonthCounter) <= 12 -- Monthly Loop  
+		BEGIN  
+		   -- Create Partitioned Table In SQL DW   
+		  SET @SQLString =  
+			 CONCAT('ALTER TABLE dbo.Trip_',@Date,'_partitioned SWITCH PARTITION ', @MonthCounter + 1,' TO dbo.Fact_Trip PARTITION ',@MonthCounter + 1)		
+		   SET @ParmDefinition = '@MonthCounter int'
+		   EXECUTE SP_ExecuteSQL @SQLString , @ParmDefinition, @MonthCounter = @MonthCounter
+		  
+		   SET @MonthCounter = @Monthcounter + 1 
+		   Set @Date = @Date + 1
+		END
+		
+		/*
+		DROP TABLE dbo.Trip_201312_partitioned
+		DROP TABLE dbo.Trip_201311_partitioned
+		DROP TABLE dbo.Trip_201310_partitioned
+		DROP TABLE dbo.Trip_201309_partitioned			
+		DROP TABLE dbo.Trip_201308_partitioned
+		DROP TABLE dbo.Trip_201307_partitioned
+		DROP TABLE dbo.Trip_201306_partitioned			
+		DROP TABLE dbo.Trip_201305_partitioned
+		DROP TABLE dbo.Trip_201304_partitioned
+		DROP TABLE dbo.Trip_201303_partitioned			
+		DROP TABLE dbo.Trip_201302_partitioned
+		DROP TABLE dbo.Trip_201301_partitioned
+		
+	    DROP TABLE dbo.Trip_201312
+		DROP TABLE dbo.Trip_201311
+		DROP TABLE dbo.Trip_201310
+		DROP TABLE dbo.Trip_201309			
+		DROP TABLE dbo.Trip_201308
+		DROP TABLE dbo.Trip_201307
+		DROP TABLE dbo.Trip_201306			
+		DROP TABLE dbo.Trip_201305
+		DROP TABLE dbo.Trip_201304
+		DROP TABLE dbo.Trip_201303			
+		DROP TABLE dbo.Trip_201302
+		DROP TABLE dbo.Trip_201301
+		*/

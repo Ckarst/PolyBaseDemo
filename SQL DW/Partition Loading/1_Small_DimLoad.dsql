@@ -1,0 +1,59 @@
+﻿-- Load a Small Dimension Table 
+--(21 seconds)
+
+-- Index choice: Clustered columnstore not really an option since size is less than 1mill row group.
+-- Distribution: Ideally this would be replicated, but round robin is a good starting point for now.
+-- Resiliency: This is a short load. 16 seconds. Resiliency isnt needed 
+
+
+-- Create Dim_Geography
+Create Table Dim_Geography
+With ( Clustered Index (GeographyID) ,
+	   Distribution= Round_robin
+ ) 
+As Select * FROM ADLS.Dim_Geography
+
+-- Create Dim_HackneyLicense
+Create Table Dim_HackneyLicense
+With ( Clustered Index (HackneyLicenseID) ,
+	   Distribution= Hash(HackneyLicenseId)
+ ) 
+As Select * FROM ADLS.HackneyLicense
+
+-- Create Dim_Medallion
+Create Table Dim_Medallion
+With ( Clustered Index (MedallionId) ,
+	   Distribution= Round_robin
+ ) 
+As Select * FROM ADLS.Medallion
+
+-- Create Dim_Time FROM WASB
+Create Table Dim_Time
+With ( Clustered Index (TimeId) ,
+	   Distribution= Round_robin
+ ) 
+As Select * FROM ext.Time
+
+-- Create Dim_Weather FROM WASB
+Create Table Dim_Weather
+With ( Clustered Index (Dateid) ,
+	   Distribution= Hash(dateid)
+ ) 
+As Select * FROM ext.Weather
+
+-- Create Dim_Date
+Create Table Dim_Date 
+With ( Clustered Index (Dateid) ,
+	   Distribution= Hash(Dateid)
+ ) 
+As Select * FROM ADLS.Date
+
+
+/*
+Drop TABLE dbo.Dim_Date
+DROP TABLE dbo.Dim_Geography
+Drop TABLE dbo.Dim_HackneyLicense
+Drop TABLE dbo.Dim_Time
+Drop TABLE dbo.Dim_Weather
+Drop TABLE dbo.Dim_Medallion
+*/

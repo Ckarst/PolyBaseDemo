@@ -1,0 +1,58 @@
+﻿
+/*
+•Azure Active Directory Application to use for Service-to-Service authentication.
+ To create please follow: https://docs.microsoft.com/en-us/azure/data-lake-store/data-lake-store-authenticate-using-active-directory
+
+NOTE: You will need the client ID, Key, and OAuth2.0 Token Endpoint Value of your Active Directory Application to connect to your Azure Data Lake from SQL Data Warehouse. Details for how to get these values are in the link above.
+ */
+
+
+ -- A: Create a Database Master Key. -- Only necessary if one does not already exist. 
+ -- Required to encrypt the credential secret in the next step. -- For more information on Master Key: https://msdn.microsoft.com/en-us/library/ms174382.aspx?f=255&MSPPError=-2147217396
+CREATE MASTER KEY;
+
+-- B: Create a database scoped credential -- IDENTITY: Pass the client id and OAuth 2.0 Token Endpoint taken from your Azure Active Directory Application -- SECRET: Provide your AAD Application Service Principal key. -- For more information on Create Database Scoped Credential: https://msdn.microsoft.com/en-us/library/mt270260.aspx
+CREATE DATABASE SCOPED CREDENTIAL ADLUser 
+WITH IDENTITY = '<clientID>@<OAuth2.0TokenEndPoint>', SECRET = '<KEY>' ;
+
+
+-- C: Create an external data source -- TYPE: HADOOP - PolyBase uses Hadoop APIs to access data in Azure Data Lake Store. -- LOCATION: Provide Azure Data Lake accountname and URI -- CREDENTIAL: Provide the credential created in the previous step.
+CREATE EXTERNAL DATA SOURCE AzureDataLakeStore 
+WITH ( TYPE = HADOOP, LOCATION = 'adl://pbaseadls.azuredatalake.net',
+       CREDENTIAL = ADLUser );
+
+ -- D: Create an external file format -- FIELDTERMINATOR: Marks the end of each field (column) in a delimited text file -- STRINGDELIMITER: Specifies the field terminator for data of type string in the text-delimited file. -- DATE_FORMAT: Specifies a custom format for all date and time data that might appear in a delimited text file. -- UseTypeDefault: Store all Missing values as NULL
+
+CREATE EXTERNAL FILE FORMAT TextFileFormat 
+WITH ( FORMATTYPE = DELIMITEDTEXT 
+     , FORMATOPTIONS ( FIELDTERMINATOR = '|' 
+					 , STRINGDELIMITER = '' 
+					 , DATEFORMAT = 'yyyy-MM-dd HH:mm:ss.fff' 
+					 , USETYPE_DEFAULT = FALSE 
+					 ) 
+	)
+					 
+
+-- E: Create an External Table 
+-- LOCATION: Folder under the ADLS root folder. 
+-- DATASOURCE: Specifies which Data Source Object to use.
+-- FILEFORMAT: Specifies which File Format Object to use 
+-- REJECTTYPE: Specifies how you want to deal with rejected rows. Either Value or percentage of the total 
+-- REJECTVALUE: Sets the Reject value based on the reject type.
+
+CREATE EXTERNAL TABLE [dbo].[DimProductexternal] 
+( [ProductKey] [int] NOT NULL, 
+  [ProductLabel] nvarchar NULL, 
+  [ProductName] nvarchar NULL ) 
+WITH ( LOCATION='/DimProduct/' , 
+	   DATA_SOURCE = AzureDataLakeStore , 
+	   FILE_FORMAT = TextFileFormat , 
+	   REJECT_TYPE = VALUE ,
+	   REJECT_VALUE = 0 ) ;
+
+-- F: Load Data with CTAS
+CREATE TABLE [dbo].[DimProduct] 
+WITH (DISTRIBUTION = HASH([ProductKey] ) ) 
+AS SELECT * FROM 
+[dbo].[DimProduct_external] ; 
+    

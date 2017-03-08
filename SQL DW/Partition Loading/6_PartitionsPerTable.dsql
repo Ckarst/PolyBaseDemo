@@ -1,0 +1,43 @@
+﻿
+SELECT  QUOTENAME(s.[name])+'.'+QUOTENAME(t.[name]) as Table_name
+,       i.[name] as Index_name
+,       p.[data_compression_desc] as Data_Compression_desc
+,       t.object_id
+,       np.Partition_Number as [Partition_Number_low]
+,       SUM(np.Rows) as [rows]
+FROM    sys.partitions p
+JOIN    sys.tables     t            ON    p.[object_id]      = t.[object_id]
+JOIN    sys.schemas    s            ON    t.[schema_id]      = s.[schema_id]
+JOIN    sys.indexes    i            ON    p.[object_id]      = i.[object_Id] AND   p.[index_Id]    = i.[index_Id]
+JOIN    sys.pdw_table_mappings tm   ON    t.[object_id]      = tm.[object_id]
+JOIN    Sys.pdw_nodes_tables  nt    ON    tm.physical_name   = nt.name
+JOIN    Sys.pdw_nodes_partitions np ON    nt.object_id       = np.object_id 
+									AND   nt.pdw_node_id     = np.pdw_node_id 
+									AND   nt.Distribution_id = np.Distribution_id 
+									AND   p.partition_number = np.partition_number
+WHERE t.[name] = 'Fact_Trip'
+GROUP BY np.Partition_Number,i.[name],p.[data_compression_desc],t.object_id,s.[name],t.[name]
+ORDER BY 1 DESC
+
+
+
+SELECT  QUOTENAME(s.[name])+'.'+QUOTENAME(t.[name]) as Table_name
+,       i.[name] as Index_name
+,       p.[data_compression_desc] as Data_Compression_desc
+,       t.object_id
+,       np.Partition_Number as [Partition_Number_low]
+,       SUM(np.Rows) as [rows]
+FROM    sys.partitions p
+JOIN    sys.tables     t            ON    p.[object_id]      = t.[object_id]
+JOIN    sys.schemas    s            ON    t.[schema_id]      = s.[schema_id]
+JOIN    sys.indexes    i            ON    p.[object_id]      = i.[object_Id] AND   p.[index_Id]    = i.[index_Id]
+JOIN    sys.pdw_table_mappings tm   ON    t.[object_id]      = tm.[object_id]
+JOIN    Sys.pdw_nodes_tables  nt    ON    tm.physical_name   = nt.name
+JOIN    Sys.pdw_nodes_partitions np ON    nt.object_id       = np.object_id 
+									AND   nt.pdw_node_id     = np.pdw_node_id 
+									AND   nt.Distribution_id = np.Distribution_id 
+									AND   p.partition_number = np.partition_number
+WHERE t.[name] = 'Trip_201303_partitioned'
+GROUP BY np.Partition_Number,i.[name],p.[data_compression_desc],t.object_id,s.[name],t.[name]
+ORDER BY 1 DESC
+
